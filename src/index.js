@@ -8,4 +8,4 @@ const store = configureStore()
 let root = document.createElement('div')
 document.body.appendChild(root)
 
-ReactDOM.render(<Root store={store}/>, root)
+ReactDOM.render(<Root store={store} />, root)

@@ -1,16 +1,60 @@
+import React, {Component} from 'react'
 import TodoList from './TodoList'
-import {toggleTodo} from '../actions'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import { getVisibleTodos } from '../reducers'
+import * as actions from '../actions'
+import {connect} from 'react-redux'
+import {withRouter} from 'react-router'
+import {getVisibleTodos, getIsFetching, getErrorMessage} from '../reducers'
+import FetchError from './FetchError'
 
-const mapStateToProps = (state, {params}) => ({
-  todos: getVisibleTodos(state, params.filter || 'all')
+class VisibleTodoList extends Component {
+  componentDidMount () {
+    this.fetchData()
+  }
+
+  componentDidUpdate (prevProps) {
+    if (this.props.filter !== prevProps.filter) {
+      this.fetchData()
+    }
+  }
+
+  fetchData () {
+    const {filter, fetchTodos} = this.props
+    fetchTodos(filter).then(() => console.log('received todos'))
+  }
+
+  render () {
+    const {toggleTodo, todos, errorMessage, isFetching} = this.props
+
+    if (isFetching && !todos.length) {
+      return <p>Loading...</p>
+    }
+
+    if (errorMessage && !todos.length) {
+      return (
+          <FetchError
+              message={errorMessage}
+              onRetry={() => this.fetchData()}
+          />)
+    }
+
+    return (
+        <TodoList
+            todos={todos}
+            onTodoClick={toggleTodo}
+        />
+    )
+  }
+}
+
+
+const mapStateToProps = (state, {params: {filter = 'all'}}) => ({
+  todos: getVisibleTodos(state, filter),
+  isFetching: getIsFetching(state, filter),
+  errorMessage: getErrorMessage(state, filter),
+  filter
 })
 
-const VisibleTodoList = withRouter(connect(
+export default withRouter(connect(
     mapStateToProps,
-    {onTodoClick: toggleTodo}
-)(TodoList))
-
-export default VisibleTodoList
+    actions
+)(VisibleTodoList))

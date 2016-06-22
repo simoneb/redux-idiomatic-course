@@ -1,31 +1,16 @@
-import { createStore } from 'redux'
-import _ from 'lodash'
-import reducers from './reducers'
+import {createStore, applyMiddleware} from 'redux'
+import todoApp from './reducers'
+import thunk from 'redux-thunk'
+import createLogger from 'redux-logger'
 
 const configureStore = () => {
-  const loadState = () => {
-    try {
-      return JSON.parse(localStorage.getItem('todoState'))
-    }
-    catch (err) {
-      console.error('error loading state', err.message)
-    }
+  const middlewares = [thunk]
+
+  if (process.env.NODE_ENV !== 'production') {
+    middlewares.push(createLogger())
   }
 
-  const saveState = () => {
-    try {
-      localStorage.setItem('todoState', JSON.stringify(store.getState()))
-    }
-    catch (err) {
-      console.error('error saving state', err.message)
-    }
-  }
-
-  let store = createStore(reducers, loadState() || undefined)
-
-  store.subscribe(_.throttle(saveState, 1000))
-
-  return store
+  return createStore(todoApp, applyMiddleware(...middlewares))
 }
 
 export default configureStore
